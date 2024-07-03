@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import OSRM = require("@project-osrm/osrm");
+import assert from "assert";
 
 // Access to Types from namespace
 const tile: OSRM.Tile = [0, 0, 0];
@@ -145,6 +146,24 @@ osrm.match({ coordinates, timestamps, exclude }, (err, response) => {
     if (err) throw err;
     console.log(response.tracepoints); // array of Waypoint objects
     console.log(response.matchings); // array of Route objects
+
+    let tracepoints_by_matchings = [];
+
+    for (const _ of response.matchings) {
+        tracepoints_by_matchings.push([]);
+    }
+
+    response.tracepoints.forEach((tracepoint, index) => {
+        if (!tracepoint) {
+            return;
+        }
+
+        tracepoints_by_matchings[tracepoint.matchings_index].push(tracepoint);
+    });
+
+    response.matchings.forEach((matching, m_index) => {
+        assert(matching.legs.length + 1 == tracepoints_by_matchings[m_index].length);
+    });
 });
 
 osrm.match({ coordinates, timestamps, exclude }, { format: "object" }, (err, response) => {
